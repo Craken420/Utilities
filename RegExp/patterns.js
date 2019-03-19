@@ -1,0 +1,85 @@
+const { adapt }= require('./adapt')
+
+module.exports.intls = {
+
+    //=> Get: ';Commentary util end of line'
+    comments: /^;.*$/gm,
+
+    //=> _FRM_
+    objBtwnLowScripts: /(?<=_)(dlg|frm|rep|tbl|vis)(?=_)/i,
+
+    //=> Entry: 'ActivoF_Cat_FRM_MAVI' Get: 'ActivoF_Cat_FRM'
+    untilAbbreviatObj: /.*?(dlg|frm|rep|tbl|vis)/gi,
+
+    comp: {
+        /*
+        //=> Entry:
+            [Version.frm/AccionePerfilDBMail]
+            Nombre=PerfilDBMail
+            Boton=84
+        //=> Get:
+            Nombre=PerfilDBMail
+            Boton=84
+        */
+        allExcepHeadComp: /(?<=^\[.*?\/.*?\]$)(\r(?!^\[.+?\]).*?$)+/gm,
+
+        /*
+        //=> Entry:
+            [Version.frm/AccionePerfilDBMail]
+            Nombre=PerfilDBMail
+            Boton=84
+        //=> Get:'[Version.frm/AccionePerfilDBMail]'
+        */
+        head: /(?<=^\[).*?(?=\]$)/gm,
+
+        /*
+        //=> Entry:
+            [Version.frm/AccionePerfilDBMail]
+            Nombre=PerfilDBMail
+            Boton=84
+        //=> Get:'Version.frm'
+        */
+        nameFile: /(?<=^\[).*?(?=\/.*?\])/g,
+    },
+    field: {
+        full: /^.*?\=.*?(?=(\r|\n|$))/gm,
+        name: /^.*?(?=\=)/gm,
+    }
+}
+
+module.exports.make = {
+    intls: {
+        comp: {
+            byName: nameComp => new RegExp(`\\[${adapt.toRegExp(nameComp)}*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
+            byNameFile: nameFile => new RegExp(`^\\[${adapt.toRegExp(nameFile)}\\/.*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
+            exist: nameComp => new RegExp(`^\\[${adapt.toRegExp(nameComp.join(''))}\\]`, `gm`),
+            inTheEnd: nameComp => new RegExp (`(?<=\\[${nameComp}\\](\\r\\n(?!^\\[.+?\\]).*?$)+)`,`m`),
+            outSide: nameComp => new RegExp(`\\[(?!(${adapt.toRegExp(nameComp)}|Acciones)).*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
+        },
+        field: {
+            content: field => new RegExp(`(?<=^${adapt.toRegExp(field)}\=).*?(?=(\\r|\\n|$))`, `gm`)
+        },
+    },
+    mix: {
+    },
+    sql: {
+    }
+}
+
+module.exports.mix = {
+    //=> Entry: 'ActivoF_Cat_FRM' Get Latest: '_' Exmp: ActivoF_Cat"_"FRM
+    lastLowScript: /_(?!.*?_)/,
+    lastPoint: /\.(?!.*?\.)/
+}
+
+module.exports.paths = {
+
+    //=> Entry: 'Name File.txt' Get: '.txt'
+    ext: /\.\w+$/,
+
+    //=> Entry: 'c:/Path/Name File.txt' Get: 'Name File.txt'
+    file: /.*(\\|\/)/,
+}
+
+module.exports.sql = {
+}
