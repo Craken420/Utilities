@@ -2,9 +2,9 @@ let rgx = require('./patterns')
 
 module.exports.intls = {
     objBtwnLowScripts: txt => (rgx.intls.objBtwnLowScripts.test(txt)) ? txt.match(rgx.intls.objBtwnLowScripts) : false,
-    untilAbbreviatObj: txt => {
-        if (rgx.intls.untilAbbreviatObj.test(txt)) {
-            return txt.match(rgx.intls.untilAbbreviatObj)
+    beforeAbbreviatObj: txt => {
+        if (rgx.intls.beforeAbbreviatObj.test(txt)) {
+            return txt.match(rgx.intls.beforeAbbreviatObj)
         } else {
             return false
         }
@@ -56,7 +56,6 @@ module.exports.paths = {
             return false
         }
     },
-    nameFile: txt => txt.replace(rgx.paths.file, '')
 }
 
 module.exports.sql = {

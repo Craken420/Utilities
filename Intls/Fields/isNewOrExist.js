@@ -1,4 +1,5 @@
 const take = require('../../RegExp/take')
+const { adapt } = require('../../RegExp/adapt')
 
 module.exports.isNewOrExist = (fields, txt) => {
 
@@ -10,7 +11,7 @@ module.exports.isNewOrExist = (fields, txt) => {
         let nameField = take.intls.field.name(field)
 
         if (nameField) {
-            if (new RegExp (`^${nameField.join('')}=`, `m`).test(txt)) {
+            if (new RegExp (`^${adapt.toRegExp(nameField.join(''))}=`, `m`).test(txt)) {
                 crashField.push(field)
             } else {
                 newField.push(field)
@@ -22,3 +23,16 @@ module.exports.isNewOrExist = (fields, txt) => {
         newField: newField
     }
 }
+
+module.exports.isNewOrExistPro = (field, txt) => {
+    let nameField = take.intls.field.name(field)
+    
+    if (nameField) {
+        if (new RegExp (`^${nameField}=`, `m`).test(txt)) {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+

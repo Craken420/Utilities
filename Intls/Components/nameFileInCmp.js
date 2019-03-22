@@ -17,3 +17,20 @@ module.exports.nameFileInComp = (arrayComps) => {
         }
     }).join(',').split(',')
 }
+
+module.exports.nameFile= (comp) => {
+    return comp.replace(/(?<=\[.*?)\/.*\]$[^]*/gm, '').replace(/^\[/, '')
+    // if (comp) {
+    //     if (take.intls.comp.head(comp)) {
+
+    //         let nameFile = take.intls.comp.nameFile(
+    //             '[' + take.intls.comp.head(comp).join('') + ']'
+    //         )
+
+    //         if (nameFile) return nameFile
+
+    //     } else false
+    // } else {
+    //     false
+    // }
+}

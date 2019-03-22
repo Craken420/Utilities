@@ -9,7 +9,10 @@ module.exports.intls = {
     objBtwnLowScripts: /(?<=_)(dlg|frm|rep|tbl|vis)(?=_)/i,
 
     //=> Entry: 'ActivoF_Cat_FRM_MAVI' Get: 'ActivoF_Cat_FRM'
-    untilAbbreviatObj: /.*?(dlg|frm|rep|tbl|vis)/gi,
+    beforeAbbreviatObj: /.*?(?<=_)(dlg|frm|rep|tbl|vis)/gi,
+
+    //=> Entry: 'ActivoF_Cat_FRM_MAVI' Get: '_MAVI'
+    aftereAbbreviatObj: /(?<=.*?_(dlg|frm|rep|tbl|vis)(?=_)).*/gi,
 
     comp: {
         /*
@@ -50,11 +53,12 @@ module.exports.intls = {
 module.exports.make = {
     intls: {
         comp: {
-            byName: nameComp => new RegExp(`\\[${adapt.toRegExp(nameComp)}*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
+            byName: nameComp => new RegExp(`\\[\\b${adapt.toRegExp(nameComp)}\\b\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
             byNameFile: nameFile => new RegExp(`^\\[${adapt.toRegExp(nameFile)}\\/.*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
             exist: nameComp => new RegExp(`^\\[${adapt.toRegExp(nameComp.join(''))}\\]`, `gm`),
             inTheEnd: nameComp => new RegExp (`(?<=\\[${nameComp}\\](\\r\\n(?!^\\[.+?\\]).*?$)+)`,`m`),
-            outSide: nameComp => new RegExp(`\\[(?!(${adapt.toRegExp(nameComp)}|Acciones)).*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
+            outSide: nameComp => new RegExp(`\\[(?!(\\b${adapt.toRegExp(nameComp)}\\b)).*?\\/.*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gim`),
+            // outSide: nameComp => new RegExp(`\\[(?!(\\b${adapt.toRegExp(nameComp)}\\b|Acciones)).*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
         },
         field: {
             content: field => new RegExp(`(?<=^${adapt.toRegExp(field)}\=).*?(?=(\\r|\\n|$))`, `gm`)
@@ -76,7 +80,7 @@ module.exports.paths = {
 
     //=> Entry: 'Name File.txt' Get: '.txt'
     ext: /\.\w+$/,
-
+    untilExt: /.*?(?=\.\w+$)/,
     //=> Entry: 'c:/Path/Name File.txt' Get: 'Name File.txt'
     file: /.*(\\|\/)/,
 }
