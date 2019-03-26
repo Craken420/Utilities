@@ -10,7 +10,8 @@ module.exports.intls = {
             } else {
                 return txt
             }
-        }
+        },
+        allExceptFirstComp: txt => txt.replace(rgx.intls.comp.firstNameComp, ''),
     },
     field: {
     }

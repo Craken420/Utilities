@@ -4,13 +4,13 @@ const code = require('../../Mix/Coding/codingFile')
 const cls = require('../../RegExp/cls')
 const { toJson } = require('../../Intls/Json/intlsFiletoJson')
 const { continueFields } = require('../../Intls/Json/clsContinueFields')
+const { changeFieldContent } = require('../../Intls/Fields/changeContent')
 
 function txtToList (stringValue, rgx) {
-    return stringValue.split(rgx).filter(Boolean).reduce((valorAnterior, valorActual) => {
-                return valorAnterior  + '=' + valorActual + '\n' + valorActual
+    return stringValue.split(rgx).filter(Boolean).reduce((previous, current) => {
+                return previous  + '=' + current + '\n' + current
             },'(Inicio)').replace(/$/,'=(Fin)') + '\n'
 }
-
 
 function createNewVList(txt, field, rgx) {
 
@@ -43,11 +43,31 @@ module.exports.getNewVList = options => {
         objFieldRgx.forEach(fieldRgx => {
 
             for (field in fieldRgx) {
-
                 fs.appendFileSync(file,
                     createNewVList(txt, field, fieldRgx[field])
                 )
+
+                
+                console.log(changeFieldContent(
+                    file,
+                    '',
+                    field,
+                    cls.intls.comp.allExceptFirstComp(txt).replace(/[\[\]]/g,''),
+                    '(Lista)'
+                ))
+                fs.writeFileSync(file,
+                    changeFieldContent(
+                        file,
+                        '',
+                        field,
+                        cls.intls.comp.allExceptFirstComp(txt).replace(/[\[\]]/g,''),
+                        '(Lista)'
+                    )
+                )
+        
             }
         })
+
+        
     })
 }

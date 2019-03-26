@@ -12,6 +12,11 @@ module.exports.intls = {
     comp: {
         byName: (nameComp, txt) => {
             if (rgx.make.intls.comp.byName(nameComp).test(txt)) {
+                // console.log('------------------------------------------')
+                // console.log(rgx.make.intls.comp.byName(nameComp))
+                // console.log(txt.match(rgx.make.intls.comp.byName(nameComp)))
+                // console.log('------------------------------------------')
+                // console.log(txt)
                 return txt.match(rgx.make.intls.comp.byName(nameComp))
             } else {
                 false
@@ -41,11 +46,26 @@ module.exports.intls = {
             }
         },
         full: txt => (rgx.intls.field.full.test(txt)) ? txt.match(rgx.intls.field.full) : false,
+        fullByName: (fieldName,txt) => (rgx.make.intls.field.fullByName(fieldName).test(txt)) ? txt.match(rgx.make.intls.field.fullByName(fieldName)) : false,
         name: txt => (rgx.intls.field.name.test(txt)) ? txt.match(rgx.intls.field.name) : false,
     }
 }
 
 module.exports.mix = {
+
+    firstTwoLines: txt => { if (/.*?\r\n.*?\r\n/.test(txt)) return txt.match(/.*?\r\n.*?\r\n/).join('')},
+
+    firstLine: txt => { if (/.*/.test(txt)) return txt.match(/.*/).join('')},
+  
+    lastTwoLines: txt => {
+      let lastLine = txt.replace(/^\s\n/gm, '').split('\r\n')
+      return  lastLine[lastLine.length-2] + '\r\n'
+            + lastLine[lastLine.length-1]
+    },
+    lastLine: txt => {
+      let lastLine = txt.replace(/^\s\n/gm, '').split('\r\n')
+      return lastLine[lastLine.length-1]
+    }
 }
 
 module.exports.paths = {

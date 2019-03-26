@@ -15,6 +15,17 @@ module.exports.intls = {
     aftereAbbreviatObj: /(?<=.*?_(dlg|frm|rep|tbl|vis)(?=_)).*/gi,
 
     comp: {
+/*
+        //=> Entry:
+            [Version.frm/AccionePerfilDBMail]
+            Nombre=PerfilDBMail
+            Boton=84
+        //=> Get:
+            Nombre=PerfilDBMail
+            Boton=84
+        */
+        firstNameComp: /(?<=\[.*?\]$)[^]*/m,
+
         /*
         //=> Entry:
             [Version.frm/AccionePerfilDBMail]
@@ -61,10 +72,14 @@ module.exports.make = {
             // outSide: nameComp => new RegExp(`\\[(?!(\\b${adapt.toRegExp(nameComp)}\\b|Acciones)).*?\\]((\\n|\\r)(?!^\\[.+?\\]).*?$)+`, `gm`),
         },
         field: {
-            content: field => new RegExp(`(?<=^${adapt.toRegExp(field)}\=).*?(?=(\\r|\\n|$))`, `gm`)
+            fullByName: fieldName => { return new RegExp(`^${adapt.toRegExp(fieldName)}\\=.*`, `gim`)},
+            content: fieldName => new RegExp(`(?<=^${adapt.toRegExp(fieldName)}\=).*?(?=(\\r|\\n|$))`, `gm`)
         },
     },
     mix: {
+        startUntilEnd: (firstLine, lastLine) => { 
+            return new RegExp (`${adapt.toRegExp(firstLine)}[^]*${adapt.toRegExp(lastLine).replace(/\\s$/, '')}`, ``)
+        },
     },
     sql: {
     }

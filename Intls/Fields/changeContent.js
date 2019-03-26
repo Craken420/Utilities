@@ -1,98 +1,110 @@
-/*** Sub-modulos ***/
+const rgx = require('../../RegExp/patterns')
+const take = require('../../RegExp/take')
+const { adapt } = require('../../RegExp/adapt')
+const { changeSpecialContent } = require('../../Mix/Text/replaceContent')
+const code = require('../../Mix/Coding/codingFile')
+const fs = require('fs')
+const { isStringOrArray } = require('../../Mix/Verify/isArrayOrString')
 
-/* Operadores de cadena */
-const regEx  = require('../../../Utilerias/RegEx/jsonRgx')
-const { remplazarContenido } = require('../../../Utilerias/OperarCadenas/remplazarContenido')
+function changeFieldInComp (condition, fileContent,
+    fieldName, compName, newFieldContent) {
+        
+    if (new RegExp(`\\[${adapt.toRegExp(compName)}\\]`,`gi`).test(fileContent)) {
+        // console.log('\ncompName: ',compName)
+        let selectComp = take.intls.comp.byName(compName,fileContent)
+        // console.log('\nselectComp: \n',selectComp)
+        if (selectComp) {
+            fs.appendFileSync('Reporte.txt',
+            `------------------------------------------------------------------\n`
+            + `***  Deteccion ***\n Componente: \"${compName}\"\n`)
+            
+            if (rgx.make.intls.field.fullByName(fieldName).test(selectComp.join(''))) {
+                
+                let fullField = take.intls.field.fullByName(fieldName, selectComp.join(''))
+                // console.log('\nfieldName: ',fieldName)
+                // console.log('\nfullField: \n',fullField)
+                // console.log('\nselectComp: \n',selectComp.join(''))
+                if (fullField) {
 
-/* Operadores de rutas */
-const { extraerContenidoRecodificado } = require('../../../Utilerias/Codificacion/contenidoRecodificado')
-const pcrArchivos = require('../../../Utilerias/OperadoresArchivos/procesadorArchivos')
+                    fs.appendFileSync('Reporte.txt',
+                    `    --------------------------------\n`
+                    + `       Campo: \"${fieldName}\"\n`
+                    + `       Extraccion: \"${fullField.join('')}\"\n`)
 
-/* Validaciones */
-const { determinarStringOArreglo } = require('../../../Utilerias/Validaciones/esStringOArreglo')
+                    // console.log('\nfullField: \n',fullField)
+                    // console.log('\condition: \n',condition)
 
-function remplazarCampoCmp (condicionCampo, contenidoArchivo,
-    nomCampo, nomCmp, nuevoContenidoCampo) {
-
-    if (new RegExp(`\\[${regEx.Preparar.prepararRegEx(nomCmp)}\\]`,`gi`).test(contenidoArchivo)) {
-
-        let cmpSelecionado = regEx.Extraer.extraerCmp(contenidoArchivo, nomCmp).join('')
-
-        pcrArchivos.agregarArchivo('Reporte.txt',
-        `------------------------------------------------------------------\n`
-        + `***  Deteccion ***\n Componente: \"${nomCmp}\"\n`)
-
-        if (regEx.Crear.campoSinDigito(nomCampo).test(cmpSelecionado)) {
-
-            let campoContenido = regEx.Extraer.extraerCampoContenido(cmpSelecionado, nomCampo).join('')
-
-            pcrArchivos.agregarArchivo('Reporte.txt',
-              `    --------------------------------\n`
-            + `       Campo: \"${nomCampo}\"\n`
-            + `       Extraccion: \"${campoContenido}\"\n`)
-
-            if (condicionCampo.test(campoContenido)) {
-
-                let nuevoCampo = campoContenido.replace(/(?<=^.*?=).*/gm, '') + nuevoContenidoCampo
-
-                pcrArchivos.agregarArchivo('Reporte.txt',
-                  `       --------------------------------\n`
-                + `            Campo editado: \"${nuevoCampo}\"\n`)
-
-                return regEx.Borrar.clsIniCorcheteLineaVacia(
-                    remplazarContenido(
-                        contenidoArchivo,
-                        cmpSelecionado,
-                        remplazarContenido(
-                            cmpSelecionado,
-                            campoContenido,
-                            nuevoCampo
+                    if (condition.test(fullField.join(''))) {
+                        // console.log('\nfullField: \n',fullField)
+                        let newField = fullField.join('').replace(/(?<=^.*?=).*/gm, '') + newFieldContent
+                        // console.log('\newField: \n',newField)
+                        fs.appendFileSync('Reporte.txt',
+                        `       --------------------------------\n`
+                        + `            Campo editado: \"${newField}\"\n`)
+                        // console.log(changeSpecialContent(
+                        //     selectComp.join(''),
+                        //     fullField.join(''),
+                        //     newField
+                        // ))
+                        return changeSpecialContent(
+                            fileContent,
+                            selectComp.join(''),
+                            changeSpecialContent(
+                                selectComp.join(''),
+                                fullField.join(''),
+                                newField
+                            )
                         )
-                    )
-                )
+                        
+                    } else {
 
+                        fs.appendFileSync('Reporte.txt',
+                        `------------------------------------------------------------------\n`
+                        + `***  Omicion  ***\n`
+                        + `------------------------------------------------------------------\n`
+                        + `Campo sin cumplir la condicion: \"${condition}\"\n`
+                        + `En el Componente: \"${compName}\"\n`)
+
+                        return false
+                    }
+                }
             } else {
 
-                pcrArchivos.agregarArchivo('Reporte.txt',
-                `------------------------------------------------------------------\n`
-                + `***  Omicion  ***\n`
-                + `------------------------------------------------------------------\n`
-                + `Campo sin cumplir la condicion: \"${condicionCampo}\"\n`
-                + `En el Componente: \"${nomCmp}\"\n`)
+                fs.appendFileSync('Reporte.txt',
+                    `------------------------------------------------------------------\n`
+                    + `***  Omicion  ***\n`
+                    + `No existe el campo: \"${fieldName}\"\n`
+                    + `------------------------------------------------------------------\n`)
 
                 return false
             }
-        } else {
-
-            pcrArchivos.agregarArchivo('Reporte.txt',
-                `------------------------------------------------------------------\n`
-                + `***  Omicion  ***\n`
-                + `No existe el campo: \"${nomCampo}\"\n`
-                + `------------------------------------------------------------------\n`)
-
-            return false
         }
 
     } else {
 
-        pcrArchivos.agregarArchivo('Reporte.txt',
+        fs.appendFileSync('Reporte.txt',
         `------------------------------------------------------------------\n`
         + `***  Omicion  ***\n`
-        + `No existe el componente: ${nomCmp}\n`
+        + `No existe el componente: ${fieldName}\n`
         + `------------------------------------------------------------------\n`)
 
         return false
     }
 }
 
-const operarCambio = (archivo, condicionCampo, nomCampo, nomCmp, nuevoContenidoCampo) => {
+const changeFieldContent = (file, condition, fieldName, compName, newFieldContent) => {
+    // console.log('file: ',file)
+    // console.log('condition: ',condition)
+    // console.log('fieldName: ',fieldName)
+    // console.log('compName: ',compName)
+    // console.log('newFieldContent: ',newFieldContent)
 
-    return remplazarCampoCmp(
-            new RegExp(`${condicionCampo}$`,`gim`),
-            extraerContenidoRecodificado(archivo) + '\n[',
-            nomCampo,
-            nomCmp,
-            nuevoContenidoCampo
+    return changeFieldInComp(
+            new RegExp(`${condition}$`,`gim`),
+            code.getTxtInOriginCoding(file),
+            fieldName,
+            compName,
+            newFieldContent
         )
 }
 
@@ -108,30 +120,30 @@ const operarCambio = (archivo, condicionCampo, nomCampo, nomCmp, nuevoContenidoC
  *)
  * 
  ***/
-const operarCambioEspecial = (archivo, condicionForzosa, condicionCampo,
-    nomCampo, nomCmp, nuevoContenidoCampo) => {
+const specialChangeField = (file, forceCondition, condition,
+    fieldName, compName, newFieldContent) => {
 
-    if (condicionCampo != '') {
+    if (condition != '') {
 
-        if (determinarStringOArreglo(condicionCampo) == 'string') {
-            if (condicionForzosa == true) {
+        if (isStringOrArray(condition) == 'string') {
+            if (forceCondition == true) {
 
-                return remplazarCampoCmp(
-                    new RegExp(`${condicionCampo}$`,`gim`),
-                    extraerContenidoRecodificado(archivo) + '\n[',
-                    nomCampo,
-                    nomCmp,
-                    nuevoContenidoCampo
+                return changeFieldInComp(
+                    new RegExp(`${condition}$`,`gim`),
+                    code.getTxtInOriginCoding(file),
+                    fieldName,
+                    compName,
+                    newFieldContent
                 )
 
-            } else if (condicionForzosa == false) {
+            } else if (forceCondition == false) {
 
-               return remplazarCampoCmp(
-                    new RegExp(`${condicionCampo}`,`gi`),
-                    extraerContenidoRecodificado(archivo) + '\n[',
-                    nomCampo,
-                    nomCmp,
-                    nuevoContenidoCampo
+               return changeFieldInComp(
+                    new RegExp(`${condition}`,`gi`),
+                    code.getTxtInOriginCoding(file),
+                    fieldName,
+                    compName,
+                    newFieldContent
                 )
 
             } else {
@@ -140,51 +152,51 @@ const operarCambioEspecial = (archivo, condicionForzosa, condicionCampo,
                 return false
             }
 
-        } else if (determinarStringOArreglo(condicionCampo) == 'arreglo') {
+        } else if (isStringOrArray(condition) == 'arreglo') {
 
-            pcrArchivos.agregarArchivo('Reporte.txt',
+            fs.appendFileSync('Reporte.txt',
               `\n-------------------------------------\n`
-            + `Determinacion Tipo: Condicion - ${determinarStringOArreglo(condicionCampo)}\n`
+            + `Determinacion Tipo: Condicion - ${isStringOrArray(condition)}\n`
             + `-----------------------------\n`)
 
-            if (condicionForzosa == true) {
+            if (forceCondition == true) {
 
-                let cadenaRegEx = condicionCampo.map(x => {return `(?:${x})`})
+                let rgxCondition = condition.map(x => {return `(?:${x})`})
 
-                let condicionUnida = cadenaRegEx.join('([^]*|)')
+                let unionCondition = rgxCondition.join('([^]*|)')
 
-                pcrArchivos.agregarArchivo('Reporte.txt',
+                fs.appendFileSync('Reporte.txt',
                 + `condicionCampo: Forzosa\n`
                 + `-------------------------\n`
-                + `condicionCampo: \"${condicionCampo}\"\n`
-                + `condicionUnida: \"${condicionUnida}\n`)
+                + `condition: \"${condition}\"\n`
+                + `condicionUnida: \"${unionCondition}\n`)
 
-                return remplazarCampoCmp(
-                    new RegExp(`${condicionUnida}$`,`gim`),
-                    extraerContenidoRecodificado(archivo) + '\n[',
-                    nomCampo,
-                    nomCmp,
-                    nuevoContenidoCampo
+                return changeFieldInComp(
+                    new RegExp(`${unionCondition}$`,`gim`),
+                    code.getTxtInOriginCoding(file),
+                    fieldName,
+                    compName,
+                    newFieldContent
                 )
 
-            } else if (condicionForzosa == false) {
-                let cadenaRegEx = condicionCampo.map(x => {return `(?:${x})`})
+            } else if (forceCondition == false) {
+                let rgxCondition = condition.map(x => {return `(?:${x})`})
 
-                let condicionUnida = cadenaRegEx.join('|')
+                let unionCondition = rgxCondition.join('|')
                
-                pcrArchivos.agregarArchivo('Reporte.txt',
+                fs.appendFileSync('Reporte.txt',
                   `\n-------------------------------------\n`
                 + `condicionCampo Opcional\n`
                 + `------------\n`
-                + `condicionCampo: \"${condicionCampo}\"\n`
-                + `condicionUnida: \"${condicionUnida}\"\n`)
+                + `condition: \"${condition}\"\n`
+                + `condicionUnida: \"${unionCondition}\"\n`)
 
-                return remplazarCampoCmp(
-                    new RegExp(`${condicionUnida}`,`gi`),
-                    extraerContenidoRecodificado(archivo) + '\n[',
-                    nomCampo,
-                    nomCmp,
-                    nuevoContenidoCampo
+                return changeFieldInComp(
+                    new RegExp(`${unionCondition}`,`gi`),
+                    code.getTxtInOriginCoding(file),
+                    fieldName,
+                    compName,
+                    newFieldContent
                 )
 
             } else {
@@ -198,15 +210,15 @@ const operarCambioEspecial = (archivo, condicionForzosa, condicionCampo,
             return false
         }
     } else {
-        return remplazarCampoCmp(
-            condicionCampo,
-            extraerContenidoRecodificado(archivo) + '\n[',
-            nomCampo,
-            nomCmp,
-            nuevoContenidoCampo
+        return changeFieldInComp(
+            condition,
+            code.getTxtInOriginCoding(file),
+            fieldName,
+            compName,
+            newFieldContent
         )
     }
 }
 
-module.exports.operarCambio = operarCambio
-module.exports.operarCambioEspecial = operarCambioEspecial
+module.exports.changeFieldContent = changeFieldContent
+module.exports.specialChangeField = specialChangeField
