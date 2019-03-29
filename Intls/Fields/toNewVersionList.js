@@ -7,21 +7,33 @@ const { continueFields } = require('../../Intls/Json/clsContinueFields')
 const { changeFieldContent } = require('../../Intls/Fields/changeContent')
 
 function txtToList (stringValue, rgx) {
+    stringValue = stringValue.replace(/=/g, '<IGUAL>')
+    // console.log(stringValue.replace(/=/g, '<IGUAL>'))
+    console.log('rgx: ',rgx)
     return stringValue.split(rgx).filter(Boolean).reduce((previous, current) => {
-                return previous  + '=' + current + '\n' + current
+                return previous + '=' + current + '\n' + current
             },'(Inicio)').replace(/$/,'=(Fin)') + '\n'
 }
 
-function createNewVList(txt, field, rgx) {
+function createNewVList(txt, field, rgx, file) {
 
     let obj = continueFields(toJson(txt))
 
-    for (key in obj) {
-        if (obj[key][field]) {
+    for (comp in obj) {
+        if (obj[comp][field]) {
 
-            if (rgx.test(obj[key][field])){
-
-                return '\n' + `[${key}.${field}]` + '\n' + txtToList(obj[key][field], rgx)
+            if (rgx.test(obj[comp][field])){
+                
+                return {
+                    newList: '\n' + `[${comp}.${field}]` + '\n' + txtToList(obj[comp][field], rgx),
+                    changeListContent: changeFieldContent(
+                        file,
+                        '',
+                        field,
+                        comp,
+                        '(Lista)'
+                    )
+                }
             }
         }
     }
@@ -35,7 +47,7 @@ function getFieldAndRgx (options) {
 
 module.exports.getNewVList = options => {
     options['files'].forEach(file => {
-
+        console.log(file)
         let txt = cls.intls.comments(code.getTxtInOriginCoding(file))
 
         let objFieldRgx = getFieldAndRgx(options)
@@ -43,31 +55,16 @@ module.exports.getNewVList = options => {
         objFieldRgx.forEach(fieldRgx => {
 
             for (field in fieldRgx) {
-                fs.appendFileSync(file,
-                    createNewVList(txt, field, fieldRgx[field])
+                let objNewList = createNewVList(txt, field, fieldRgx[field], file)
+
+                fs.writeFileSync(file,
+                    objNewList.changeListContent
                 )
 
-                
-                console.log(changeFieldContent(
-                    file,
-                    '',
-                    field,
-                    cls.intls.comp.allExceptFirstComp(txt).replace(/[\[\]]/g,''),
-                    '(Lista)'
-                ))
-                fs.writeFileSync(file,
-                    changeFieldContent(
-                        file,
-                        '',
-                        field,
-                        cls.intls.comp.allExceptFirstComp(txt).replace(/[\[\]]/g,''),
-                        '(Lista)'
-                    )
+                fs.appendFileSync(file,
+                    objNewList.newList
                 )
-        
             }
         })
-
-        
     })
 }
